@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClutchLab — Entrenamiento táctico para CS2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="nav-brand-mark"></div>
+      <div class="nav-brand-text">Clutch<span>Lab</span></div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#analisis">Análisis</a></li>
+      <li><a href="#herramientas">Herramientas</a></li>
+      <li><a href="#precios">Precios</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="#" class="nav-login" id="nav-login-btn">Login</a>
+      <div class="nav-user hidden" id="nav-user">
+        <span class="nav-username" id="nav-username">@usuario</span>
+        <button type="button" class="nav-logout" id="nav-logout-btn">Salir</button>
+      </div>
+      <button type="button" class="nav-cta" id="btn-analyze-nav" style="border:none;cursor:pointer;font-family:inherit;">Analizar demo</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<header class="hero">
+  
+  <!-- Kill feed decorativo -->
+  <div class="killfeed">
+    
+    <!-- AK-47 · T mata a CT -->
+    <div class="kf-item">
+      <span class="kf-faction kf-faction-t"></span>
+      <span class="kf-killer kf-t">s1mple_fan_07</span>
+      <span class="kf-weapon-wrap">
+        <img class="kf-weapon-icon" src="icons/ak47.svg" alt="AK-47">
+      </span>
+      <span class="kf-dead">phantom_lurker</span>
+    </div>
+
+    <!-- AWP headshot · CT mata a T -->
+    <div class="kf-item">
+      <span class="kf-faction kf-faction-ct"></span>
+      <span class="kf-killer kf-ct">ct_main</span>
+      <span class="kf-weapon-wrap">
+        <img class="kf-weapon-icon" src="icons/awp.svg" alt="AWP">
+        <span class="kf-hs-dot"></span>
+      </span>
+      <span class="kf-dead">rush_b_noob</span>
+    </div>
+
+    <!-- M4A1-S headshot · CT mata a T -->
+    <div class="kf-item">
+      <span class="kf-faction kf-faction-ct"></span>
+      <span class="kf-killer kf-ct">clutch_king</span>
+      <span class="kf-weapon-wrap">
+        <img class="kf-weapon-icon" src="icons/m4a1_silencer.svg" alt="M4A1-S">
+        <span class="kf-hs-dot"></span>
+      </span>
+      <span class="kf-dead">smoke_criminal</span>
+    </div>
+
+    <!-- Deagle headshot · T mata a CT -->
+    <div class="kf-item">
+      <span class="kf-faction kf-faction-t"></span>
+      <span class="kf-killer kf-t">mirage_enjoyer</span>
+      <span class="kf-weapon-wrap">
+        <img class="kf-weapon-icon" src="icons/deagle.svg" alt="Deagle">
+        <span class="kf-hs-dot"></span>
+      </span>
+      <span class="kf-dead">eco_andy</span>
+    </div>
+
+    <!-- Karambit · T mata a CT -->
+    <div class="kf-item">
+      <span class="kf-faction kf-faction-t"></span>
+      <span class="kf-killer kf-t">awp_diff</span>
+      <span class="kf-weapon-wrap">
+        <img class="kf-weapon-icon" src="icons/knife_karambit.svg" alt="Karambit">
+      </span>
+      <span class="kf-dead">peek_first</span>
+    </div>
+
+  </div>
+  
+  <!-- HUD decorativo derecha -->
+  <div class="hero-hud">
+    <div class="hud-box">
+      <div class="hud-label">Score</div>
+      <div class="hud-score">
+        <span class="ct">CT 13</span>
+        <span class="sep">—</span>
+        <span class="t">11 T</span>
+      </div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">Round Timer</div>
+      <div class="hud-timer">1:47</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">Ammo</div>
+      <div class="hud-timer" style="font-size:20px;">30 <span style="color:var(--text-faint);font-size:14px;">/ 90</span></div>
+    </div>
+  </div>
+  
+  <div class="hero-content">
+    <div class="hero-badge" data-animate="fade-up">
+      <span class="dot"></span>
+      Sistema táctico · CS2 · Beta Argentina
+    </div>
+    
+    <h1 data-animate="fade-up" style="--delay:0.1s">
+      Dejá de<br>practicar <span class="accent">al azar</span>
+    </h1>
+    
+    <p class="hero-sub" data-animate="fade-up" style="--delay:0.2s">
+      Subí tu <code>.dem</code> de Premier o FACEIT. Nuestro motor analiza cada duelo, cada trade, cada utility. La IA te arma un plan de 30 minutos con drills reales en mapas del taller. Sin servidores. Sin humo.
+    </p>
+    
+    <div class="hero-ctas" data-animate="fade-up" style="--delay:0.3s">
+      <button type="button" class="btn-primary" id="btn-analyze-hero">
+        <span>▶</span> Analizar mi demo gratis
+      </button>
+      <a href="#analisis" class="btn-secondary">
+        Ver ejemplo real
+      </a>
+    </div>
+    
+    <p class="hero-trust" data-animate="fade-up" style="--delay:0.4s">
+      <strong>Gratis para siempre</strong> · 1 análisis/semana · Sin tarjeta
+    </p>
+  </div>
+  
+  <div class="scroll-hint">Scroll</div>
+</header>
+
+<!-- ============================================================
+     STATS BAR
+     ============================================================ -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat" data-animate="fade-up">
+      <div class="stat-value" data-counter="2847">0</div>
+      <div class="stat-label">Demos analizadas</div>
+    </div>
+    <div class="stat" data-animate="fade-up" style="--delay:0.1s">
+      <div class="stat-value" data-counter="512">0</div>
+      <div class="stat-label">Jugadores activos</div>
+    </div>
+    <div class="stat" data-animate="fade-up" style="--delay:0.2s">
+      <div class="stat-value" data-counter="73" data-suffix="%">0</div>
+      <div class="stat-label">Subieron de rango</div>
+    </div>
+    <div class="stat" data-animate="fade-up" style="--delay:0.3s">
+      <div class="stat-value" data-counter="4" data-decimal="2">0</div>
+      <div class="stat-label">USD / mes Pro</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     HOW IT WORKS
+     ============================================================ -->
+<section id="como-funciona">
+  <div class="container">
+    <div class="section-header" data-animate="fade-up">
+      <div class="section-label">El protocolo</div>
+      <h2 class="section-title">Tres pasos.<br>Cero vueltas.</h2>
+      <p class="section-sub">La esencia de Refrag, sin la infraestructura. Vos ponés el CS2, nosotros ponemos el cerebro táctico.</p>
+    </div>
+    
+    <div class="steps">
+      <div class="step" data-animate="fade-up" style="--delay:0s">
+        <div class="step-num">01</div>
+        <div class="step-icon wide">
+          <img src="icons/glock.svg" alt="Glock">
+        </div>
+        <h3>Drop tu demo</h3>
+        <p>Arrastrá tu archivo <code>.dem</code> de Premier, FACEIT o scrims. Lo parseamos con `awpy` en el backend y extraemos cada evento ronda por ronda.</p>
+      </div>
+      <div class="step" data-animate="fade-up" style="--delay:0.15s">
+        <div class="step-num">02</div>
+        <div class="step-icon">
+          <img src="icons/defuser.svg" alt="Defuser">
+        </div>
+        <h3>Recibí tu diagnóstico</h3>
+        <p>La IA detecta tus 3 debilidades más críticas: pre-aim, trades, reacción, utilidad, opening duels. Y te arma un plan de 30 min basado en datos reales.</p>
+      </div>
+      <div class="step" data-animate="fade-up" style="--delay:0.3s">
+        <div class="step-num">03</div>
+        <div class="step-icon wide">
+          <img src="icons/ak47.svg" alt="AK-47">
+        </div>
+        <h3>Ejecutá y subí</h3>
+        <p>Cargás los mapas del taller que te indicamos (Aim Botz, Yprac, etc.), hacés los drills, y marcás la sesión completada. Nosotros medimos tu progreso semana a semana.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     DEMO DASHBOARD - ANÁLISIS
+     ============================================================ -->
+<section id="analisis" class="demo-section">
+  <div class="container">
+    <div class="section-header" data-animate="fade-up">
+      <div class="section-label">Análisis real</div>
+      <h2 class="section-title">Así se ve<br>tu diagnóstico.</h2>
+      <p class="section-sub">Cada número está sacado de tu demo. Cada clip es una jugada tuya. Cada drill apunta a corregir lo que fallás.</p>
+    </div>
+    
+    <div class="dashboard" data-animate="scale">
+      <!-- Topbar estilo ventana -->
+      <div class="dash-topbar">
+        <div class="dash-dot r"></div>
+        <div class="dash-dot y"></div>
+        <div class="dash-dot g"></div>
+        <div class="dash-url" id="dash-url">clutchlab.gg / demo / esperando_demo.dem</div>
+      </div>
+      
+      <div class="dash-body">
+        <!-- Panel izquierdo: clip + plan -->
+        <div class="dash-panel">
+          <div class="dash-panel-title">Clip de jugada · Round 14</div>
+          
+          <div class="clip" data-animate="fade-up">
+            <video autoplay loop muted playsinline preload="metadata">
+              <source src="clips/ejemplodemo.webm" type="video/webm">
+            </video>
+            <div class="clip-overlay">
+              <span class="clip-tag">ACE</span>
+              <div class="clip-info">
+                <span>Mirage · A-site · vs. FACEIT Lvl 8</span>
+                <span class="clip-timestamp">R14 · 0:34</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="plan">
+            <div class="plan-title">Plan de hoy · 30 minutos</div>
+            <ul class="plan-list">
+              <li class="plan-item">
+                <strong>10 min</strong> — Aim Botz, Drill 3 (flick y microajuste). No muevas el mouse antes de ver el modelo.
+              </li>
+              <li class="plan-item">
+                <strong>15 min</strong> — Yprac Prefire Mirage: ángulos A-site (tetas, default, ramp). Entrada en seco.
+              </li>
+              <li class="plan-item">
+                <strong>5 min</strong> — Instant Smokes: lineup de humo CT desde T-ramp. Repetí 10 veces.
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- Panel derecho: métricas -->
+        <div class="dash-panel">
+          <div class="dash-panel-title">Métricas · Últimas 3 demos</div>
+          
+          <div class="metrics-grid">
+            <div class="metric" data-animate="fade-up" style="--delay:0s">
+              <div class="metric-label">ADR</div>
+              <div class="metric-value good" id="metric-adr">87.3</div>
+              <div class="metric-delta" id="metric-adr-delta">Tu daño por ronda</div>
+            </div>
+            <div class="metric" data-animate="fade-up" style="--delay:0.1s">
+              <div class="metric-label">KAST</div>
+              <div class="metric-value warn" id="metric-kast">68%</div>
+              <div class="metric-delta" id="metric-kast-delta">Kill + Assist + Survive + Trade</div>
+            </div>
+            <div class="metric" data-animate="fade-up" style="--delay:0.2s">
+              <div class="metric-label">Opening duels won</div>
+              <div class="metric-value warn" id="metric-opening">42%</div>
+              <div class="metric-delta" id="metric-opening-delta">Duelos de entrada ganados</div>
+            </div>
+            <div class="metric" data-animate="fade-up" style="--delay:0.3s">
+              <div class="metric-label">Trade efficiency</div>
+              <div class="metric-value warn" id="metric-trade">61%</div>
+              <div class="metric-delta" id="metric-trade-delta">Muertes vengadas por tu equipo</div>
+            </div>
+            <div class="metric" data-animate="fade-up" style="--delay:0.4s">
+              <div class="metric-label">Utility dmg / ronda</div>
+              <div class="metric-value good" id="metric-utility">12.4</div>
+              <div class="metric-delta" id="metric-utility-delta">Daño de granadas por ronda</div>
+            </div>
+            <div class="metric" data-animate="fade-up" style="--delay:0.5s">
+              <div class="metric-label">Kills / Deaths</div>
+              <div class="metric-value good" id="metric-kd">22 / 15</div>
+              <div class="metric-delta" id="metric-kd-delta">Total en la demo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FEATURES
+     ============================================================ -->
+<section id="herramientas">
+  <div class="container">
+    <div class="section-header" data-animate="fade-up">
+      <div class="section-label">Arsenal completo</div>
+      <h2 class="section-title">El nivel de los mejores,<br><span style="color:var(--orange)">forjado en Latinoamérica</span>.</h2>
+      <p class="section-sub">Cada módulo está conectado a tu análisis. Nada es genérico. Cada drill, cada lineup, cada rutina sale de tu gameplay real.</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feat" data-animate="fade-up" style="--delay:0s">
+        <div class="feat-icon">
+          <img src="icons/customplayer.svg" alt="Jugador">
+        </div>
+        <h3>Coach IA de demos</h3>
+        <p>Análisis profundo con métricas que ni sabías que existían: opening duels, trade%, KAST, reacción en ángulos abiertos.</p>
+        <div class="feat-tag">Análisis · Free</div>
+      </div>
+      <div class="feat" data-animate="fade-up" style="--delay:0.1s">
+        <div class="feat-icon wide">
+          <img src="icons/ak47.svg" alt="AK-47">
+        </div>
+        <h3>Aim Routines</h3>
+        <p>Drills específicos en Aim Botz, Crossfire y mapas del taller, asignados según tu debilidad detectada. Nada al azar.</p>
+        <div class="feat-tag">Drills · Pro</div>
+      </div>
+      <div class="feat" data-animate="fade-up" style="--delay:0.2s">
+        <div class="feat-icon">
+          <img src="icons/movelinear.svg" alt="Ruta de prefire">
+        </div>
+        <h3>Prefire por mapa</h3>
+        <p>Rutas priorizadas de prefire. Te decimos qué ángulo limpiar primero en Mirage, Inferno, Dust2 según tus demos.</p>
+        <div class="feat-tag">Ejecución · Pro</div>
+      </div>
+      <div class="feat" data-animate="fade-up" style="--delay:0s">
+        <div class="feat-icon wide">
+          <img src="icons/grenadepack.svg" alt="Pack de granadas">
+        </div>
+        <h3>Utility Hub</h3>
+        <p>Lineups en texto + video con link directo a Instant Smokes o Yprac Utility. Guardá tus propias alineaciones.</p>
+        <div class="feat-tag">Lineups · Pro</div>
+      </div>
+      <div class="feat" data-animate="fade-up" style="--delay:0.1s">
+        <div class="feat-icon wide">
+          <img src="icons/inferno.svg" alt="Mapa Inferno">
+        </div>
+        <h3>Bootcamps por mapa</h3>
+        <p>Rutas de 7 días para Mirage, Dust2, Inferno, Ancient y Anubis. Tareas diarias + seguimiento de progreso.</p>
+        <div class="feat-tag">Contenido · Pro</div>
+      </div>
+      <div class="feat" data-animate="fade-up" style="--delay:0.2s">
+        <div class="feat-icon">
+          <img src="icons/healthshot.svg" alt="Boost de progreso">
+        </div>
+        <h3>Rachas y progreso</h3>
+        <p>Historial de sesiones, rachas, y evolución de métricas. Ves lo que los mapas gratis no te muestran.</p>
+        <div class="feat-tag">Tracking · Free</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     MAP POOL
+     ============================================================ -->
+<div class="map-pool">
+  <div class="map-pool-inner">
+    <div class="map-pool-title" data-animate="fade-up">Map pool soportado · Premier 2026</div>
+    <div class="maps">
+      <div class="map-chip" data-animate="scale" style="--delay:0s">Mirage</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.05s">Inferno</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.1s">Dust2</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.15s">Ancient</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.2s">Anubis</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.25s">Nuke</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.3s">Vertigo</div>
+      <div class="map-chip" data-animate="scale" style="--delay:0.35s">Train</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PRICING
+     ============================================================ -->
+<section id="precios">
+  <div class="container">
+    <div class="section-header" data-animate="fade-up">
+      <div class="section-label">Inversión</div>
+      <h2 class="section-title">Empezá gratis.<br>Pagá solo si te sirve.</h2>
+      <p class="section-sub">Sin tarjeta. Sin trampa. El plan Free es completo de verdad — no es una demo recortada.</p>
+    </div>
+    
+    <div class="pricing-grid">
+      <div class="price-card" data-animate="fade-up" style="--delay:0s">
+        <div class="price-name">Free</div>
+        <div class="price-value"><span class="cur">$</span>0<span class="per">/ siempre</span></div>
+        <p class="price-desc">Para probar si el método funciona con tu juego real.</p>
+        <ul class="price-list">
+          <li>1 análisis de demo por semana</li>
+          <li>Diagnóstico + plan de 30 min</li>
+          <li>Biblioteca básica de lineups</li>
+          <li>Rachas y progreso básico</li>
+          <li class="off">Análisis ilimitados</li>
+          <li class="off">Bootcamps avanzados</li>
+        </ul>
+        <a href="#" class="price-cta outline">Empezar gratis</a>
+      </div>
+      
+      <div class="price-card featured" data-animate="fade-up" style="--delay:0.15s">
+        <div class="price-tag">Recomendado</div>
+        <div class="price-name">Pro</div>
+        <div class="price-value"><span class="cur">$</span>4<span class="per">/ mes</span></div>
+        <p class="price-desc">Para el jugador que quiere subir de rango en serio.</p>
+        <ul class="price-list">
+          <li>Análisis ilimitados de demos</li>
+          <li>Historial de progreso completo</li>
+          <li>Bootcamps de todos los mapas</li>
+          <li>Utility Hub completo</li>
+          <li>Comparativa con mayor rango</li>
+          <li>Acceso anticipado a nuevas features</li>
+        </ul>
+        <a href="#" class="price-cta fill">Probar 7 días gratis</a>
+      </div>
+      
+      <div class="price-card" data-animate="fade-up" style="--delay:0.3s">
+        <div class="price-name">Equipos</div>
+        <div class="price-value"><span class="cur">$</span>15<span class="per">/ mes</span></div>
+        <p class="price-desc">Para organizaciones y academias que entrenan en serio.</p>
+        <ul class="price-list">
+          <li>Hasta 5 cuentas Pro</li>
+          <li>Panel de equipo con progreso grupal</li>
+          <li>Análisis de scrims compartido</li>
+          <li>Rutinas personalizadas por equipo</li>
+          <li>Soporte prioritario en español</li>
+          <li>Facturación para organizaciones</li>
+        </ul>
+        <a href="#" class="price-cta outline">Contactar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FINAL CTA
+     ============================================================ -->
+<section class="final-cta">
+  <div class="final-cta-content">
+    <h2 data-animate="fade-up">
+      Tu próxima partida<br>puede ser <span class="accent">distinta</span>.
+    </h2>
+    <p data-animate="fade-up" style="--delay:0.15s">
+      Subí una demo ahora. En 30 segundos tenés tu primer plan de entrenamiento personalizado. Gratis, sin tarjeta, sin vueltas.
+    </p>
+    <div data-animate="fade-up" style="--delay:0.3s">
+      <button type="button" class="btn-primary" id="btn-analyze-final">
+        <span>▶</span> Analizar mi primera demo
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">Clutch<span>Lab</span></div>
+      <ul class="footer-links">
+        <li><a href="#">Discord</a></li>
+        <li><a href="#">Twitter</a></li>
+        <li><a href="#">Términos</a></li>
+        <li><a href="#">Privacidad</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 ClutchLab. Hecho con 🧡 en Argentina.</span>
+      <span>CS2 · FACEIT · Premier · Scrims</span>
+    </div>
+    <p class="footer-disclaimer">
+      ClutchLab no está afiliado a Valve Corporation. Counter-Strike es una marca registrada de Valve. Usamos únicamente mapas del Taller de Steam con permiso de sus autores, o guiamos al usuario a descargarlos de forma independiente. No distribuimos contenido de terceros.
+    </p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     AUTH MODAL
+     ============================================================ -->
+<div class="auth-modal-overlay" id="auth-modal">
+  <div class="auth-modal">
+    <button type="button" class="auth-modal-close" id="auth-modal-close">×</button>
+    
+    <div class="auth-modal-header">
+      <div class="auth-modal-tag">Acceso requerido</div>
+      <h2 class="auth-modal-title">Tu cuenta</h2>
+    </div>
+    
+    <div class="auth-modal-tabs">
+      <button type="button" class="auth-modal-tab active" data-tab="login">Entrar</button>
+      <button type="button" class="auth-modal-tab" data-tab="register">Crear cuenta</button>
+    </div>
+    
+    <form class="auth-form" id="auth-form-login" data-tab-content="login">
+      <div class="auth-field">
+        <label class="auth-label" for="login-email">Email</label>
+        <input class="auth-input" type="email" id="login-email" placeholder="tu@email.com" required>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="login-password">Contraseña</label>
+        <input class="auth-input" type="password" id="login-password" placeholder="••••••" required>
+      </div>
+      <div class="auth-error" id="login-error"></div>
+      <button type="submit" class="auth-submit" id="login-submit">Entrar</button>
+    </form>
+    
+    <form class="auth-form" id="auth-form-register" data-tab-content="register" style="display:none">
+      <div class="auth-field">
+        <label class="auth-label" for="register-email">Email</label>
+        <input class="auth-input" type="email" id="register-email" placeholder="tu@email.com" required>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="register-username">Username</label>
+        <input class="auth-input" type="text" id="register-username" placeholder="tunombre" minlength="3" maxlength="30" required>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="register-password">Contraseña (mín. 6)</label>
+        <input class="auth-input" type="password" id="register-password" placeholder="••••••" minlength="6" required>
+      </div>
+      <div class="auth-error" id="register-error"></div>
+      <button type="submit" class="auth-submit" id="register-submit">Crear cuenta</button>
+    </form>
+  </div>
+</div>
+
+<!-- Input oculto para subir la demo -->
+<input type="file" id="demo-file-input" accept=".dem" style="display:none">
+
+<script src="script.js"></script>
+
+</body>
+</html>

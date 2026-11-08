@@ -1,0 +1,35 @@
+# --- Python / Backend ---
+# Entornos virtuales (se recrean con pip install)
+venv/
+.venv/
+env/
+ENV/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Secretos y Configuración Local ---
+# NUNCA subir variables de entorno (API keys, contraseñas)
+.env
+.env.local
+.env.*.local
+
+# --- Bases de Datos Locales ---
+# La BD SQLite local no se sube (producción usará Neon)
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Frontend / Node (si aplica) ---
+node_modules/
+dist/
+build/
+
+# --- Sistema Operativo e IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
