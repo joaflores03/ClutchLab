@@ -1,0 +1,16 @@
+# Excluir el backend (ya está desplegado en Render)
+backend/
+
+# Excluir archivos de configuración de Git y del sistema
+.git/
+.gitignore
+
+# Excluir archivos locales que no deben subirse
+.env
+*.db
+*.dem
+
+# Excluir archivos de configuración del backend (si están en la raíz)
+render.yaml
+requirements.txt
+.python-version
