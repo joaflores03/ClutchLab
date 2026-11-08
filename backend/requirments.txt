@@ -1,4 +1,3 @@
---no-cache-dir
 # ── Web framework ────────────────────────────────────────
 fastapi
 uvicorn[standard]
