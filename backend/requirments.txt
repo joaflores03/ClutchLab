@@ -1,1 +1,22 @@
+# ── Web framework ────────────────────────────────────────
+fastapi
+uvicorn[standard]
+python-multipart
+
+# ── Base de datos ────────────────────────────────────────
+sqlalchemy
 psycopg[binary]
+
+# ── Autenticación ────────────────────────────────────────
+bcrypt
+python-jose[cryptography]
+email-validator
+
+# ── Parser de demos de CS2 ───────────────────────────────
+awpy
+
+# ── IA (Groq, compatible con SDK de OpenAI) ──────────────
+openai
+
+# ── Configuración ────────────────────────────────────────
+python-dotenv
