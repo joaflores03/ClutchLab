@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 // 1. CONSTANTES Y ESTADO
 // ═══════════════════════════════════════════════════════════════
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://clutchlab-api.onrender.com';
 const TOKEN_KEY = 'clutchlab_token';
 const USER_KEY = 'clutchlab_user';
 const LOGIN_URL = '/index.html';

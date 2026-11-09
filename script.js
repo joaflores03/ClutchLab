@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
    2. AUTH — Login, registro, sesión y modal
    ============================================================ */
 (function initAuth() {
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = 'https://clutchlab-api.onrender.com';
   const TOKEN_KEY = 'clutchlab_token';
   const USER_KEY = 'clutchlab_user';
   const DASHBOARD_URL = '/dashboard.html';
