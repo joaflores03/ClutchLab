@@ -1,6 +1,6 @@
 """
 ClutchLab API — Recibe demos de CS2 y devuelve análisis en JSON.
-Correr con: uvicorn api:app --reload --port 8000
+Correr con: uvicorn api:app --host 0.0.0.0 --port 8000
 """
 import hashlib
 import json
@@ -20,21 +20,38 @@ from coach import generar_plan
 from database import Base, engine, get_db
 from models import Analysis, User
 
+# Import opcional de la función optimizada (si existe en analyze.py)
+try:
+    from analyze import analizar_demo_desde_objeto
+    _HAS_FAST_ANALYZE = True
+except ImportError:
+    _HAS_FAST_ANALYZE = False
+    analizar_demo_desde_objeto = None
+
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="ClutchLab API", version="0.6.0")
+app = FastAPI(title="ClutchLab API", version="0.7.0")
 
+
+# ═══════════════════════════════════════════════════════════════
+# CORS — debe ir ANTES de los routers
+# ═══════════════════════════════════════════════════════════════
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://clutchlabgg.vercel.app",
+        "https://clutchlabgg-git-main-joaflores03.vercel.app",
+        "https://clutchlabgg-joaflores03.vercel.app",
         "http://localhost:5500",
         "http://127.0.0.1:5500",
+        "http://localhost:3000",
     ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=True,
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 app.include_router(auth_router)
@@ -48,19 +65,17 @@ CACHE_TTL_MINUTES = 15
 VALID_DURATIONS = {15, 30, 45}
 
 
-def cleanup_cache() -> None:
-    """Borra archivos temporales de sesiones expiradas."""
-    now = datetime.utcnow()
-    expired = [
-        sid for sid, data in DEMO_CACHE.items()
-        if now - data["created_at"] > timedelta(minutes=CACHE_TTL_MINUTES)
-    ]
-    for sid in expired:
-        _cleanup_session(sid)
+def _cleanup_paths(tmp_path: Path, tmp_dir: Path) -> None:
+    """Borra archivo y directorio temporal de forma segura."""
+    try:
+        tmp_path.unlink(missing_ok=True)
+        tmp_dir.rmdir()
+    except Exception:
+        pass
 
 
 def _cleanup_session(session_id: str) -> None:
-    """Limpia archivos de una sesión específica."""
+    """Limpia archivos y objeto Demo de una sesión específica."""
     data = DEMO_CACHE.pop(session_id, None)
     if not data:
         return
@@ -71,16 +86,38 @@ def _cleanup_session(session_id: str) -> None:
         pass
 
 
+def cleanup_cache() -> None:
+    """Borra sesiones expiradas del cache."""
+    now = datetime.utcnow()
+    expired = [
+        sid for sid, data in DEMO_CACHE.items()
+        if now - data["created_at"] > timedelta(minutes=CACHE_TTL_MINUTES)
+    ]
+    for sid in expired:
+        _cleanup_session(sid)
+
+
 # ═══════════════════════════════════════════════════════════════
-# HEALTH
+# ROOT + HEALTH
 # ═══════════════════════════════════════════════════════════════
+@app.get("/")
+def root():
+    return {
+        "app": "ClutchLab API",
+        "version": "0.7.0",
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
 # ═══════════════════════════════════════════════════════════════
-# SUBIR DEMO (sin analizar todavía)
+# SUBIR DEMO (parsea jugadores, cachea el Demo para reusar)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/demo/upload")
 async def upload_demo(
@@ -88,17 +125,13 @@ async def upload_demo(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Sube una demo y devuelve la lista de jugadores + cuáles ya fueron
-    analizados por este usuario. El usuario después elige a quién analizar.
-    """
     if not file.filename.endswith(".dem"):
         raise HTTPException(400, "El archivo debe ser .dem")
 
     content = await file.read()
     demo_hash = hashlib.sha256(content).hexdigest()
 
-    # ¿Cuáles jugadores ya fueron analizados para esta demo?
+    # ¿Qué jugadores ya fueron analizados para esta demo?
     existing = (
         db.query(Analysis.player_name)
         .filter(
@@ -109,7 +142,6 @@ async def upload_demo(
     )
     analyzed_players = [row[0] for row in existing if row[0]]
 
-    # Guardar archivo temporal
     cleanup_cache()
     session_id = str(uuid.uuid4())
     tmp_dir = Path(tempfile.mkdtemp())
@@ -118,9 +150,31 @@ async def upload_demo(
     with tmp_path.open("wb") as buffer:
         buffer.write(content)
 
-    # Parsear jugadores
+    # Parsear la demo UNA SOLA VEZ y cachear el objeto para /analyze
+    demo_obj = None
     try:
-        players = get_players(str(tmp_path))
+        from awpy import Demo
+        import polars as pl
+
+        demo_obj = Demo(tmp_path)
+        demo_obj.load("stats")
+
+        stats = demo_obj.stats
+        if stats is None or len(stats) == 0:
+            raise ValueError("La demo no contiene estadísticas de jugadores")
+
+        players = []
+        for row in stats.iter_rows(named=True):
+            players.append({
+                "name": row.get("name", "—"),
+                "kills": int(row.get("kills", 0) or 0),
+                "deaths": int(row.get("deaths", 0) or 0),
+                "assists": int(row.get("assists", 0) or 0),
+                "adr": round(float(row.get("adr", 0) or 0), 1),
+                "kast": round(float(row.get("kast", 0) or 0), 1),
+            })
+        players.sort(key=lambda p: p["kills"], reverse=True)
+
     except Exception as e:
         _cleanup_paths(tmp_path, tmp_dir)
         raise HTTPException(500, f"Error parseando la demo: {str(e)}")
@@ -129,7 +183,6 @@ async def upload_demo(
         _cleanup_paths(tmp_path, tmp_dir)
         raise HTTPException(422, "No se encontraron jugadores en la demo")
 
-    # ¿Están TODOS ya analizados?
     all_names = {p["name"] for p in players}
     all_analyzed = all_names.issubset(set(analyzed_players))
 
@@ -139,6 +192,7 @@ async def upload_demo(
         "hash": demo_hash,
         "filename": file.filename,
         "created_at": datetime.utcnow(),
+        "demo_obj": demo_obj,  # cachear para reusar en /analyze
     }
 
     print(
@@ -154,17 +208,8 @@ async def upload_demo(
     }
 
 
-def _cleanup_paths(tmp_path: Path, tmp_dir: Path) -> None:
-    """Borra archivo y directorio temporal de forma segura."""
-    try:
-        tmp_path.unlink(missing_ok=True)
-        tmp_dir.rmdir()
-    except Exception:
-        pass
-
-
 # ═══════════════════════════════════════════════════════════════
-# ANALIZAR JUGADOR (genera plan IA y guarda en BD)
+# ANALIZAR JUGADOR
 # ═══════════════════════════════════════════════════════════════
 @app.post("/analyze")
 async def analyze(
@@ -174,10 +219,6 @@ async def analyze(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Analiza un jugador específico de la demo subida.
-    Si ya existe un análisis de este jugador para esta demo, lo devuelve.
-    """
     cached = DEMO_CACHE.get(session_id)
     if not cached:
         raise HTTPException(404, "Sesión expirada. Subí la demo de nuevo.")
@@ -185,7 +226,7 @@ async def analyze(
     if duration not in VALID_DURATIONS:
         duration = 30
 
-    # ¿Ya existe análisis de este jugador para esta demo?
+    # ¿Ya existe un análisis de este jugador para esta demo?
     existing = (
         db.query(Analysis)
         .filter(
@@ -206,9 +247,24 @@ async def analyze(
         resultado["created_at"] = existing.created_at.isoformat()
         return resultado
 
-    # Analizar
     try:
-        resultado = analizar_demo(cached["path"], player)
+        # Intentar reusar el Demo cacheado (evita re-parsear = 2x más rápido)
+        resultado = None
+        if _HAS_FAST_ANALYZE and cached.get("demo_obj") is not None:
+            try:
+                demo_obj = cached["demo_obj"]
+                # Cargar solo las tablas que faltan (stats ya está cargada)
+                demo_obj.load("kills", "damages", "rounds")
+                resultado = analizar_demo_desde_objeto(demo_obj, player)
+                print(f"⚡ Análisis rápido (reusando Demo cacheado)")
+            except Exception as e:
+                print(f"⚠️ Fallback a re-parseo por: {e}")
+                resultado = None
+
+        # Fallback: re-parsear desde el archivo
+        if resultado is None:
+            resultado = analizar_demo(cached["path"], player)
+
         if resultado is None:
             raise HTTPException(422, "No se pudo analizar la demo para ese jugador")
 

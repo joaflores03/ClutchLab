@@ -227,3 +227,66 @@ if __name__ == "__main__":
     jugador = sys.argv[2] if len(sys.argv) > 2 else None
 
     analizar_demo(ruta, jugador)
+
+    def analizar_demo_desde_objeto(demo, target_player: str = None) -> dict:
+    """Analiza reusando un objeto Demo ya cargado (evita re-parsear)."""
+    import polars as pl
+
+    mapa = demo.header.get("map_name", "desconocido")
+    rounds = demo.rounds
+    kills = demo.kills
+    stats = demo.stats
+    damages = demo.damages
+    total_rounds = len(rounds)
+
+    if stats is None or len(stats) == 0:
+        return None
+
+    if target_player is None:
+        target_player = stats.sort("kills", descending=True).head(1)["name"][0]
+
+    kills = asignar_ronda_por_tick(kills, rounds)
+
+    player_stats = stats.filter(pl.col("name") == target_player)
+    if len(player_stats) == 0:
+        return None
+    ps = player_stats.row(0, named=True)
+
+    opening_pct = 0.0
+    if "round_num" in kills.columns:
+        opening_duels = []
+        for r in rounds["round_num"].to_list():
+            rk = kills.filter(pl.col("round_num") == r).sort("tick")
+            if len(rk) > 0:
+                opening_duels.append(rk[0]["attacker_name"][0] == target_player)
+        if opening_duels:
+            opening_pct = sum(opening_duels) / len(opening_duels) * 100
+
+    util_per_round = 0.0
+    if damages is not None and len(damages) > 0:
+        util_weapons = ["hegrenade", "inferno", "molotov", "incgrenade"]
+        ud = damages.filter(
+            (pl.col("attacker_name") == target_player) &
+            (pl.col("weapon").is_in(util_weapons))
+        )["dmg_health"].sum()
+        util_per_round = ud / total_rounds if total_rounds > 0 else 0.0
+
+    player_deaths = kills.filter(pl.col("victim_name") == target_player)
+    total_deaths = len(player_deaths)
+    trade_pct = 0.0
+    if "victim_traded" in kills.columns and total_deaths > 0:
+        traded = player_deaths.filter(pl.col("victim_traded") == True)
+        trade_pct = len(traded) / total_deaths * 100
+
+    return {
+        "jugador": target_player,
+        "mapa": mapa,
+        "rondas": total_rounds,
+        "kills": ps["kills"],
+        "deaths": ps["deaths"],
+        "adr": round(float(ps["adr"]), 1),
+        "kast": round(float(ps["kast"]), 1),
+        "opening_duels_won_pct": round(opening_pct, 1),
+        "trade_efficiency_pct": round(trade_pct, 1),
+        "utility_dmg_per_round": round(util_per_round, 1),
+    }
