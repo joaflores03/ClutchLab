@@ -1,8 +1,6 @@
 """
-ClutchLab — Analizador de demos de CS2 (awpy 2.x, robusto)
-Uso: python analyze.py ruta/a/tu_demo.dem [nombre_jugador]
+ClutchLab — Analizador de demos de CS2 (awpy 2.x)
 """
-import sys
 from pathlib import Path
 from awpy import Demo
 import polars as pl
@@ -11,50 +9,38 @@ import polars as pl
 def asignar_ronda_por_tick(kills: pl.DataFrame, rounds: pl.DataFrame) -> pl.DataFrame:
     """Asigna round_num a cada kill usando los ticks de inicio/fin de ronda."""
     if "round_num" in kills.columns:
-        print("✅ 'round_num' ya está en kills.")
         return kills
 
-    print("⚠️ 'round_num' no está en kills. Intentando asignar por ticks...")
-    print(f"   Columnas de rounds: {rounds.columns}")
-    print(f"   Primeras 2 filas de rounds:\n{rounds.head(2)}")
-    print(f"   Rango de ticks en kills: {kills['tick'].min()} - {kills['tick'].max()}")
+    print("⚠️ 'round_num' no está en kills. Calculando por ticks...")
 
-    # Detectar columnas de inicio y fin
     start_col = None
     end_col = None
     for c in rounds.columns:
         cl = c.lower()
-        if 'start' in cl and 'tick' in cl:
+        if "start" in cl and "tick" in cl:
             start_col = c
-        if 'end' in cl and 'tick' in cl:
+        if "end" in cl and "tick" in cl:
             end_col = c
     if not start_col or not end_col:
         for c in rounds.columns:
             cl = c.lower()
-            if cl in ('start', 'start_tick'):
+            if cl in ("start", "start_tick"):
                 start_col = c
-            if cl in ('end', 'end_tick'):
+            if cl in ("end", "end_tick"):
                 end_col = c
 
     if not start_col or not end_col:
-        print("❌ No se encontraron columnas de inicio/fin en rounds. No se puede asignar round_num.")
+        print("❌ No se encontraron columnas de inicio/fin en rounds.")
         return kills
 
-    print(f"   Usando columnas: start='{start_col}', end='{end_col}'")
-
-    # Filtrar rondas con ticks válidos (start null → usar 0)
     rangos_df = rounds.select(
         pl.col(start_col).fill_null(0).alias("start"),
         pl.col(end_col).alias("end"),
-        pl.col("round_num")
-    ).filter(
-        pl.col("end").is_not_null()
-    )
-    rangos_list = list(rangos_df.iter_rows())
-    print(f"   Rangos válidos: {len(rangos_list)}")
+        pl.col("round_num"),
+    ).filter(pl.col("end").is_not_null())
 
+    rangos_list = list(rangos_df.iter_rows())
     if not rangos_list:
-        print("❌ No hay rangos de ronda válidos.")
         return kills
 
     def tick_a_ronda(tick: int) -> int | None:
@@ -71,7 +57,10 @@ def asignar_ronda_por_tick(kills: pl.DataFrame, rounds: pl.DataFrame) -> pl.Data
     return kills
 
 
-def analizar_demo(ruta_demo: str, target_player: str = None):
+def analizar_demo(ruta_demo: str, target_player: str = None) -> dict | None:
+    """
+    Parsea la demo desde el archivo y devuelve las métricas del jugador.
+    """
     print(f"📂 Parseando: {ruta_demo}")
     demo = Demo(Path(ruta_demo))
     demo.load("kills", "damages", "rounds", "stats")
@@ -84,21 +73,17 @@ def analizar_demo(ruta_demo: str, target_player: str = None):
     kills = demo.kills
     stats = demo.stats
     damages = demo.damages
-
     total_rounds = len(rounds)
     print(f"   - Rondas: {total_rounds}")
 
-    # Intentar asignar round_num
     kills = asignar_ronda_por_tick(kills, rounds)
 
     if stats is None or len(stats) == 0:
         print("⚠️ No se encontraron estadísticas en la demo")
-        return
+        return None
 
-    # Si no se especifica jugador, tomar el que más kills tiene
     if target_player is None:
-        top = stats.sort("kills", descending=True).head(1)
-        target_player = top["name"][0]
+        target_player = stats.sort("kills", descending=True).head(1)["name"][0]
 
     print(f"\n🎯 Jugador analizado: {target_player}\n")
 
@@ -106,69 +91,39 @@ def analizar_demo(ruta_demo: str, target_player: str = None):
     if len(player_stats) == 0:
         print(f"❌ No se encontró al jugador '{target_player}' en la demo")
         print(f"   Jugadores disponibles: {stats['name'].to_list()}")
-        return
+        return None
 
-    # ✅ Fila como diccionario
     ps = player_stats.row(0, named=True)
 
-    # ── Opening duels (solo si tenemos round_num)
+    # Opening duels
     opening_pct = 0.0
     if "round_num" in kills.columns:
         opening_duels = []
         for r in rounds["round_num"].to_list():
-            round_kills = kills.filter(pl.col("round_num") == r).sort("tick")
-            if len(round_kills) > 0:
-                first = round_kills[0]
-                opening_duels.append(first["attacker_name"][0] == target_player)
-        opening_total = len(opening_duels)
-        opening_won = sum(1 for won in opening_duels if won)
-        opening_pct = (opening_won / opening_total * 100) if opening_total > 0 else 0.0
-    else:
-        print("⚠️ No se pudo calcular opening duels (sin round_num).")
+            rk = kills.filter(pl.col("round_num") == r).sort("tick")
+            if len(rk) > 0:
+                opening_duels.append(rk[0]["attacker_name"][0] == target_player)
+        if opening_duels:
+            opening_pct = sum(opening_duels) / len(opening_duels) * 100
 
-    # ── Utility damage
+    # Utility damage
+    util_per_round = 0.0
     if damages is not None and len(damages) > 0:
         util_weapons = ["hegrenade", "inferno", "molotov", "incgrenade"]
-        util_dmg = damages.filter(
-            (pl.col("attacker_name") == target_player) &
-            (pl.col("weapon").is_in(util_weapons))
+        ud = damages.filter(
+            (pl.col("attacker_name") == target_player)
+            & (pl.col("weapon").is_in(util_weapons))
         )["dmg_health"].sum()
-        util_per_round = util_dmg / total_rounds if total_rounds > 0 else 0.0
-    else:
-        util_per_round = 0.0
+        util_per_round = ud / total_rounds if total_rounds > 0 else 0.0
 
-    # ── Trade efficiency
+    # Trade efficiency
     player_deaths = kills.filter(pl.col("victim_name") == target_player)
     total_deaths = len(player_deaths)
+    trade_pct = 0.0
+    if "victim_traded" in kills.columns and total_deaths > 0:
+        traded = player_deaths.filter(pl.col("victim_traded") == True)
+        trade_pct = len(traded) / total_deaths * 100
 
-    if "victim_traded" in kills.columns:
-        # Método directo: victim_traded indica si la muerte fue vengada
-        traded_deaths = player_deaths.filter(pl.col("victim_traded") == True)
-        trade_pct = (len(traded_deaths) / total_deaths * 100) if total_deaths > 0 else 0.0
-        print("✅ Trade efficiency calculado con 'victim_traded'.")
-    elif "round_num" in kills.columns:
-        # Método antiguo (por rondas)
-        trade_kills = 0
-        for death in player_deaths.iter_rows(named=True):
-            death_round = death["round_num"]
-            death_tick = death["tick"]
-            death_side = death["victim_side"]
-            death_killer = death["attacker_name"]
-            teammates_trade = kills.filter(
-                (pl.col("round_num") == death_round) &
-                (pl.col("tick") > death_tick) &
-                (pl.col("tick") < death_tick + 320) &
-                (pl.col("attacker_side") == death_side) &
-                (pl.col("victim_name") == death_killer)
-            )
-            if len(teammates_trade) > 0:
-                trade_kills += 1
-        trade_pct = (trade_kills / total_deaths * 100) if total_deaths > 0 else 0.0
-    else:
-        trade_pct = 0.0
-        print("⚠️ No se pudo calcular trade efficiency.")
-
-    # ── Resultado final
     resultado = {
         "jugador": target_player,
         "mapa": mapa,
@@ -195,15 +150,14 @@ def analizar_demo(ruta_demo: str, target_player: str = None):
 def get_players(ruta_demo: str) -> list[dict]:
     """
     Devuelve la lista de jugadores de la demo con stats básicas.
-    No genera plan ni guarda nada — solo lee la tabla stats.
     """
     demo = Demo(Path(ruta_demo))
     demo.load("stats")
-    
+
     stats = demo.stats
     if stats is None or len(stats) == 0:
         return []
-    
+
     players = []
     for row in stats.iter_rows(named=True):
         players.append({
@@ -214,24 +168,16 @@ def get_players(ruta_demo: str) -> list[dict]:
             "adr": round(float(row.get("adr", 0) or 0), 1),
             "kast": round(float(row.get("kast", 0) or 0), 1),
         })
-    
+
     players.sort(key=lambda p: p["kills"], reverse=True)
     return players
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Uso: python analyze.py ruta/a/tu_demo.dem [nombre_jugador]")
-        sys.exit(1)
 
-    ruta = sys.argv[1]
-    jugador = sys.argv[2] if len(sys.argv) > 2 else None
-
-    analizar_demo(ruta, jugador)
-
-    def analizar_demo_desde_objeto(demo, target_player: str = None) -> dict:
-    """Analiza reusando un objeto Demo ya cargado (evita re-parsear)."""
-    import polars as pl
-
+def analizar_demo_desde_objeto(demo, target_player: str = None) -> dict | None:
+    """
+    Analiza reusando un objeto Demo ya cargado (evita re-parsear).
+    Requiere que demo ya tenga cargadas las tablas: kills, damages, rounds, stats.
+    """
     mapa = demo.header.get("map_name", "desconocido")
     rounds = demo.rounds
     kills = demo.kills
@@ -252,6 +198,7 @@ if __name__ == "__main__":
         return None
     ps = player_stats.row(0, named=True)
 
+    # Opening duels
     opening_pct = 0.0
     if "round_num" in kills.columns:
         opening_duels = []
@@ -262,15 +209,17 @@ if __name__ == "__main__":
         if opening_duels:
             opening_pct = sum(opening_duels) / len(opening_duels) * 100
 
+    # Utility damage
     util_per_round = 0.0
     if damages is not None and len(damages) > 0:
         util_weapons = ["hegrenade", "inferno", "molotov", "incgrenade"]
         ud = damages.filter(
-            (pl.col("attacker_name") == target_player) &
-            (pl.col("weapon").is_in(util_weapons))
+            (pl.col("attacker_name") == target_player)
+            & (pl.col("weapon").is_in(util_weapons))
         )["dmg_health"].sum()
         util_per_round = ud / total_rounds if total_rounds > 0 else 0.0
 
+    # Trade efficiency
     player_deaths = kills.filter(pl.col("victim_name") == target_player)
     total_deaths = len(player_deaths)
     trade_pct = 0.0
@@ -290,3 +239,15 @@ if __name__ == "__main__":
         "trade_efficiency_pct": round(trade_pct, 1),
         "utility_dmg_per_round": round(util_per_round, 1),
     }
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Uso: python analyze.py ruta/a/tu_demo.dem [nombre_jugador]")
+        sys.exit(1)
+
+    ruta = sys.argv[1]
+    jugador = sys.argv[2] if len(sys.argv) > 2 else None
+    analizar_demo(ruta, jugador)
